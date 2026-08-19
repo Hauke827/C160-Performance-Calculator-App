@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1f18">
+<meta name="description" content="AzurPoly C-160 Transall Performance Calculator – Takeoff, Landing, Cruise, Weight & Balance">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="C160 Perf">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>C-160 Transall Performance</title>
+<style>
+  :root {
+    --bg: #1a1f18;
+    --card: #242b20;
+    --card2: #2c3428;
+    --accent: #c4a35a;
+    --accent2: #8b9a6b;
+    --text: #e8e4d9;
+    --muted: #9a9588;
+    --ok: #7cb87c;
+    --warn: #d4a017;
+    --bad: #c45c5c;
+    --border: #3d4636;
+    --panel-edge: #4a5340;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(180deg, rgba(26,31,24,0.82) 0%, rgba(26,31,24,0.88) 40%, rgba(26,31,24,0.94) 100%),
+      url('bg.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: var(--text);
+    line-height: 1.45;
+    padding: 0.8rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    min-height: 100dvh;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0.9rem;
+    background: linear-gradient(180deg, rgba(44,52,40,0.95) 0%, rgba(36,43,32,0.96) 100%);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  header img { width: 48px; height: 48px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .subtitle {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 0.95rem;
+    color: var(--accent);
+    margin: 0 0 0.65rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.8rem;
+  }
+  .card {
+    background: linear-gradient(165deg, rgba(44,52,40,0.92) 0%, rgba(36,43,32,0.94) 100%);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--panel-edge);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      0 4px 12px rgba(0,0,0,0.25);
+  }
+  label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.18rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  input, select, button {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: #151a13;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(196,163,90,0.25);
+  }
+  button {
+    background: linear-gradient(180deg, #d4b46a 0%, var(--accent) 100%);
+    color: #1a1f18;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #a88b45;
+    margin-top: 0.4rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+  }
+  button:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 0 10px rgba(196,163,90,0.3);
+  }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .result {
+    background: #121610;
+    border-radius: 6px;
+    padding: 0.7rem 0.8rem;
+    margin-top: 0.6rem;
+    font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+    font-size: 0.84rem;
+    white-space: pre-wrap;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+  }
+  .ok { color: var(--ok); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  .row { display: flex; gap: 0.55rem; margin-bottom: 0.55rem; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 120px; }
+  small { color: var(--muted); font-size: 0.7rem; }
+  .note {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 1rem;
+    padding: 0.7rem 0.85rem;
+    background: rgba(36,43,32,0.94);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+    background: rgba(36,43,32,0.94);
+    padding: 0.3rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    padding: 0.42rem 0.8rem;
+    border-radius: 5px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+  }
+  .tab:hover { color: var(--text); background: rgba(196,163,90,0.08); }
+  .tab.active {
+    background: linear-gradient(180deg, #d4b46a 0%, var(--accent) 100%);
+    color: #1a1f18;
+    border-color: #a88b45;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  #installBtn {
+    display: none;
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 100;
+    width: auto;
+    padding: 0.6rem 1.1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+  }
+  .trim-box {
+    display: inline-block;
+    background: #121610;
+    border: 2px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.45rem 0.9rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0.3rem 0;
+    letter-spacing: 0.03em;
+  }
+  .cg-envelope {
+    margin: 0.6rem 0 0.3rem;
+    position: relative;
+    height: 30px;
+    background: #121610;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .cg-envelope-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(124,184,124,0.2) 0%, rgba(124,184,124,0.35) 50%, rgba(124,184,124,0.2) 100%);
+  }
+  .cg-envelope-scale {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    pointer-events: none;
+    font-family: ui-monospace, monospace;
+  }
+  .cg-marker {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    width: 4px;
+    margin-left: -2px;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--accent);
+    transition: left 0.25s ease;
+  }
+  .cg-marker.out {
+    background: var(--bad);
+    box-shadow: 0 0 8px var(--bad);
+  }
+  .cg-marker.warn {
+    background: var(--warn);
+    box-shadow: 0 0 8px var(--warn);
+  }
+  .cg-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+  }
+  .rwy-graphic {
+    margin-top: 0.85rem;
+    background: #121610;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 0.85rem 0.9rem;
+  }
+  .rwy-graphic-title {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .rwy-track {
+    position: relative;
+    height: 36px;
+    background: #2a3224;
+    border-radius: 4px;
+    border: 1px solid #3d4636;
+    overflow: hidden;
+  }
+  .rwy-track::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: repeating-linear-gradient(90deg, #c4a35a 0 12px, transparent 12px 22px);
+    opacity: 0.35;
+  }
+  .rwy-required {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(196,163,90,0.55), rgba(196,163,90,0.25));
+    border-right: 2px solid var(--accent);
+    transition: width 0.3s ease;
+  }
+  .rwy-required.over {
+    background: linear-gradient(90deg, rgba(196,92,92,0.65), rgba(196,92,92,0.3));
+    border-right-color: var(--bad);
+  }
+  .rwy-required.ok {
+    background: linear-gradient(90deg, rgba(124,184,124,0.55), rgba(124,184,124,0.25));
+    border-right-color: var(--ok);
+  }
+  .rwy-ac {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.1rem;
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+    transition: left 0.3s ease;
+    z-index: 2;
+  }
+  .rwy-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.35rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+  }
+  .rwy-status {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .rwy-status.ok { color: var(--ok); }
+  .rwy-status.over { color: var(--bad); }
+  .rwy-status.na { color: var(--muted); }
+  .profile-view {
+    margin-top: 0.85rem;
+    background: #121610;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 0.85rem 0.9rem;
+  }
+  .profile-title {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.45rem;
+  }
+  .profile-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .profile-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    margin-top: 0.45rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .tank-graphic {
+    margin-top: 0.75rem;
+    background: #121610;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.7rem 0.85rem;
+  }
+  .tank-title {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .tank-wings {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.5rem;
+    align-items: end;
+  }
+  .tank-wing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .tank-wing-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tank-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .tank-name {
+    width: 1.2rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+  }
+  .tank-bar-bg {
+    flex: 1;
+    height: 18px;
+    background: #1a1f18;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .tank-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .tank-bar-fill.a { background: linear-gradient(90deg, #c4a35a, #d4b46a); }
+  .tank-bar-fill.b { background: linear-gradient(90deg, #8b9a6b, #a3b37e); }
+  .tank-bar-fill.c { background: linear-gradient(90deg, #5b9bd5, #7eb0e0); }
+  .tank-bar-fill.empty { background: transparent; }
+  .tank-qty {
+    width: 4.5rem;
+    font-size: 0.68rem;
+    font-family: ui-monospace, monospace;
+    color: var(--text);
+    text-align: right;
+  }
+  .tank-fuselage {
+    width: 28px;
+    height: 70px;
+    background: #2c3428;
+    border: 1px solid var(--panel-edge);
+    border-radius: 6px 6px 4px 4px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .tank-summary {
+    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: ui-monospace, monospace;
+  }
+  .profile-legend span::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+    border-radius: 1px;
+  }
+  .leg-to::before { background: var(--accent); }
+  .leg-climb::before { background: #7cb87c; }
+  .leg-accel::before { background: #5b9bd5; }
+  .leg-reduce::before { background: var(--warn); }
+
+  @media (max-width: 600px) {
+    body { padding: 0.55rem; }
+    h1 { font-size: 1.05rem; }
+    .tab { padding: 0.35rem 0.55rem; font-size: 0.7rem; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <img src="icon-192.png" alt="C160" width="42" height="42">
+    <div>
+      <h1>C-160 Transall Performance</h1>
+      <div class="subtitle">AzurPoly · MSFS 2024 · Performance · W&amp;B</div>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-panel="wb">W&B + Trim</div>
+    <div class="tab" data-panel="fuel">Fuel Planning</div>
+    <div class="tab" data-panel="speeds">Speeds</div>
+    <div class="tab" data-panel="to">Takeoff</div>
+    <div class="tab" data-panel="cruise">Cruise</div>
+    <div class="tab" data-panel="ldg">Landing</div>
+  </div>
+
+  <!-- W&B + Trim -->
+  <div class="panel active" id="panel-wb">
+    <div class="card">
+      <h2>Weight & Balance + Takeoff Trim</h2>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.8rem;">
+        Empty weight <b>30 000 kg</b> @ <b>28.0 %MAC</b>. CG calculated from station loads (MSFS EFB style).
+      </p>
+      <div class="grid">
+        <div>
+          <label>Cockpit Crew (kg)</label>
+          <input type="number" id="crew" value="320" step="10" min="0" max="800">
+          <label>Fuel (kg) · max 23 830 kg</label>
+          <input type="number" id="fuel" value="12000" step="100" min="0" max="23830">
+          <label>Payload Station 1 – Forward (kg)</label>
+          <input type="number" id="payload1" value="4000" step="50" min="0" max="12000">
+          <label>Payload Station 2 – Aft (kg)</label>
+          <input type="number" id="payload2" value="4000" step="50" min="0" max="12000">
+        </div>
+        <div>
+          <label style="visibility:hidden">.</label>
+          <button onclick="calcWB()">Calculate Weight, CG & Trim</button>
+          <div id="wbResult" class="result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fuel Planning -->
+  <div class="panel" id="panel-fuel">
+    <div class="card">
+      <h2>Fuel Planning</h2>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.8rem;">
+        VFR or IFR fuel calculation. Shows total fuel required and maximum possible payload.
+      </p>
+      <div class="row" style="margin-bottom:0.75rem">
+        <div>
+          <label>Rules</label>
+          <select id="fuelRules" onchange="toggleFuelRules()">
+            <option value="ifr" selected>IFR</option>
+            <option value="vfr">VFR</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Trip input</label>
+          <select id="tripMode" onchange="toggleTripMode()">
+            <option value="distance" selected>Distance (NM)</option>
+            <option value="time">Time (h : min)</option>
+          </select>
+          <div id="tripDistBox">
+            <label>Trip Distance (NM)</label>
+            <input type="number" id="tripDist" value="400" step="10" min="0">
+          </div>
+          <div id="tripTimeBox" style="display:none">
+            <label>Trip Time</label>
+            <div class="row" style="margin-bottom:0">
+              <div><input type="number" id="tripHours" value="1" step="1" min="0" placeholder="h"></div>
+              <div><input type="number" id="tripMins" value="30" step="5" min="0" max="59" placeholder="min"></div>
+            </div>
+          </div>
+          <label>Cruise Altitude (ft)</label>
+          <select id="fuelAlt">
+            <option value="10000">10 000 ft</option>
+            <option value="16000" selected>16 000 ft</option>
+            <option value="20000">20 000 ft</option>
+          </select>
+          <label>Cruise N1 (rpm)</label>
+          <select id="fuelPower">
+            <option value="13500">13 500 rpm</option>
+            <option value="12500" selected>12 500 rpm</option>
+            <option value="11500">11 500 rpm</option>
+          </select>
+          <label>Average TAS (kt) – leave 0 for auto</label>
+          <input type="number" id="fuelTas" value="0" step="5" min="0">
+        </div>
+        <div>
+          <label>Alternate Distance (NM)</label>
+          <input type="number" id="altDist" value="80" step="5" min="0">
+          <div id="ifrOnly">
+            <label>Contingency (% of trip fuel)</label>
+            <input type="number" id="contPct" value="5" step="1" min="0" max="15">
+            <label>Final Reserve (min holding)</label>
+            <input type="number" id="finalMin" value="30" step="5" min="15" max="60">
+          </div>
+          <div id="vfrOnly" style="display:none">
+            <label>VFR Reserve</label>
+            <select id="vfrReserve">
+              <option value="30" selected>30 min</option>
+              <option value="45">45 min</option>
+            </select>
+          </div>
+          <label>Taxi fuel (kg)</label>
+          <input type="number" id="taxiFuel" value="240" step="10" min="0">
+          <button onclick="calcFuel()">Calculate Fuel & Max Payload</button>
+        </div>
+      </div>
+      <div id="fuelResult" class="result" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Speeds -->
+  <div class="panel" id="panel-speeds">
+    <div class="card">
+      <h2>Reference Speeds (Manual §11.1)</h2>
+      <div class="row">
+        <div><label>Weight (kg)</label><input type="number" id="spdW" value="45000" step="100"></div>
+        <div><label>Flaps Takeoff</label>
+          <select id="spdFlapsTO"><option value="20">20°</option><option value="10">10°</option></select>
+        </div>
+        <div><label>Flaps Landing</label>
+          <select id="spdFlapsLDG">
+            <option value="30">30° (VREF)</option>
+            <option value="40">40°</option>
+            <option value="20">20°</option>
+            <option value="0">0°</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="calcSpeeds()">Lookup Speeds</button>
+      <div id="spdResult" class="result" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Takeoff -->
+  <div class="panel" id="panel-to">
+    <div class="card">
+      <h2>Takeoff Performance</h2>
+      <div class="grid">
+        <div>
+          <label>Takeoff Weight (kg)</label>
+          <input type="number" id="tow" value="45000" step="100">
+          <label>Flaps</label>
+          <select id="flapsTO">
+            <option value="20" selected>20°</option>
+            <option value="10">10°</option>
+            <option value="0">0°</option>
+          </select>
+          <label>Field Elevation (ft)</label>
+          <input type="number" id="elevTO" value="0" step="10">
+          <label>OAT (°C)</label>
+          <input type="number" id="oatTO" value="15" step="1">
+          <label>QNH (hPa)</label>
+          <input type="number" id="qnhTO" value="1013" step="1">
+        </div>
+        <div>
+          <label>Headwind (kt)</label>
+          <input type="number" id="hwTO" value="0" step="1">
+          <label>Runway slope (%)</label>
+          <input type="number" id="slopeTO" value="0" step="0.1">
+          <label>Runway Condition</label>
+          <select id="rwyTO">
+            <option value="dry" selected>Dry</option>
+            <option value="wet">Wet</option>
+            <option value="contam">Contaminated</option>
+          </select>
+          <label>Runway Length (m)</label>
+          <input type="number" id="rwyLenTO" value="2500" step="50" min="0">
+          <label>Water-Methanol</label>
+          <select id="wmTO"><option value="0">Without W/M</option><option value="1">With W/M</option></select>
+          <label>Noise Abatement (EASA)</label>
+          <select id="nadpTO">
+            <option value="none">None (standard climb)</option>
+            <option value="nadp1" selected>NADP 1</option>
+            <option value="nadp2">NADP 2</option>
+          </select>
+          <button onclick="calcTO()">Calculate Takeoff</button>
+        </div>
+      </div>
+      <div id="toResult" class="result" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Landing -->
+  <div class="panel" id="panel-ldg">
+    <div class="card">
+      <h2>Landing Performance</h2>
+      <div class="grid">
+        <div>
+          <label>Landing Weight (kg)</label>
+          <input type="number" id="lw" value="42000" step="100">
+          <label>Field Elevation (ft)</label>
+          <input type="number" id="elevLDG" value="0" step="10">
+          <label>OAT (°C)</label>
+          <input type="number" id="oatLDG" value="15" step="1">
+          <label>QNH (hPa)</label>
+          <input type="number" id="qnhLDG" value="1013" step="1">
+        </div>
+        <div>
+          <label>Headwind (kt)</label>
+          <input type="number" id="hwLDG" value="0" step="1">
+          <label>Flaps</label>
+          <select id="flapsLDG"><option value="30">30°</option><option value="40">40°</option></select>
+          <label>Runway Condition</label>
+          <select id="rwyLDG">
+            <option value="dry" selected>Dry</option>
+            <option value="wet">Wet</option>
+            <option value="contam">Contaminated</option>
+          </select>
+          <label>Runway Length (m)</label>
+          <input type="number" id="rwyLenLDG" value="2500" step="50" min="0">
+          <label>Short-field (40 % A/B + reverse)</label>
+          <select id="shortLDG"><option value="0">Normal (no reverse)</option><option value="1">Short field</option></select>
+          <button onclick="calcLDG()">Calculate Landing</button>
+        </div>
+      </div>
+      <div id="ldgResult" class="result" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Cruise -->
+  <div class="panel" id="panel-cruise">
+    <div class="card">
+      <h2>Cruise Performance & Power Settings</h2>
+      <div class="grid">
+        <div>
+          <label>Cruise Weight (kg)</label>
+          <input type="number" id="cw" value="43000" step="100">
+          <label>Pressure Altitude (ft)</label>
+          <select id="cAlt">
+            <option value="0">0 ft</option>
+            <option value="5000">5 000 ft</option>
+            <option value="10000">10 000 ft</option>
+            <option value="16000" selected>16 000 ft</option>
+            <option value="20000">20 000 ft</option>
+          </select>
+          <label>OAT / ISA deviation (°C)</label>
+          <input type="number" id="cOat" value="0" step="1">
+        </div>
+        <div>
+          <label>N1 (rpm)</label>
+          <select id="power">
+            <option value="13500">13 500 rpm</option>
+            <option value="12500" selected>12 500 rpm</option>
+            <option value="11500">11 500 rpm</option>
+            <option value="10500">10 500 rpm</option>
+          </select>
+          <button onclick="calcCruise()">Calculate Cruise</button>
+        </div>
+      </div>
+      <div id="cruiseResult" class="result" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Data source:</strong> AzurPoly C-160 Transall Flight Manual Rev.13, §11 (pp. 89–108).<br>
+    Empty weight 30 000 kg @ 28 %MAC · MTOW 51 000 kg · Max fuel 23 830 kg · MLW ≈ 47 000 kg.<br>
+    CG envelope 20–36 %MAC. Station positions approximate MSFS EFB (Crew 20 %, Fuel 27.5 %, Fwd 24 %, Aft 35 %).<br>
+    Takeoff trim is an estimate. Fuel planning uses standard IFR structure. Distances are calibrated approximations – verify critical values in the manual / EFB.
+  </div>
+
+  <button id="installBtn" class="secondary">Install App</button>
+
+<script>
+// ===== Official speed table (manual p.89) =====
+const speedTable = {
+  30:{VR10:96,V210:98,VR20:89,V220:92,VAPP0:111,VAPP20:95,VAPP30:91,VAPP40:88,VS0:85,VS10:78,VS20:73,VS30:70,VS40:67},
+  31:{VR10:97,V210:100,VR20:91,V220:93,VAPP0:112,VAPP20:97,VAPP30:92,VAPP40:89,VS0:87,VS10:80,VS20:74,VS30:71,VS40:68},
+  32:{VR10:99,V210:101,VR20:92,V220:95,VAPP0:115,VAPP20:98,VAPP30:94,VAPP40:91,VS0:88,VS10:81,VS20:76,VS30:72,VS40:69},
+  33:{VR10:100,V210:103,VR20:94,V220:96,VAPP0:116,VAPP20:100,VAPP30:95,VAPP40:92,VS0:90,VS10:82,VS20:77,VS30:73,VS40:70},
+  34:{VR10:102,V210:104,VR20:95,V220:97,VAPP0:118,VAPP20:101,VAPP30:97,VAPP40:94,VS0:91,VS10:83,VS20:78,VS30:74,VS40:72},
+  35:{VR10:103,V210:106,VR20:96,V220:99,VAPP0:120,VAPP20:103,VAPP30:98,VAPP40:95,VS0:92,VS10:85,VS20:79,VS30:75,VS40:73},
+  36:{VR10:105,V210:107,VR20:98,V220:100,VAPP0:122,VAPP20:104,VAPP30:100,VAPP40:96,VS0:94,VS10:86,VS20:80,VS30:76,VS40:74},
+  37:{VR10:106,V210:109,VR20:99,V220:101,VAPP0:124,VAPP20:106,VAPP30:101,VAPP40:98,VS0:95,VS10:87,VS20:81,VS30:78,VS40:75},
+  38:{VR10:108,V210:110,VR20:100,V220:103,VAPP0:125,VAPP20:107,VAPP30:102,VAPP40:99,VS0:96,VS10:88,VS20:82,VS30:79,VS40:76},
+  39:{VR10:109,V210:112,VR20:102,V220:104,VAPP0:127,VAPP20:108,VAPP30:104,VAPP40:100,VS0:98,VS10:89,VS20:83,VS30:80,VS40:77},
+  40:{VR10:110,V210:113,VR20:103,V220:105,VAPP0:129,VAPP20:110,VAPP30:105,VAPP40:102,VS0:99,VS10:91,VS20:84,VS30:81,VS40:78},
+  41:{VR10:112,V210:115,VR20:104,V220:107,VAPP0:130,VAPP20:111,VAPP30:106,VAPP40:103,VS0:100,VS10:92,VS20:86,VS30:82,VS40:79},
+  42:{VR10:113,V210:116,VR20:105,V220:108,VAPP0:132,VAPP20:113,VAPP30:107,VAPP40:104,VS0:101,VS10:93,VS20:87,VS30:83,VS40:80},
+  43:{VR10:115,V210:117,VR20:107,V220:109,VAPP0:133,VAPP20:114,VAPP30:109,VAPP40:105,VS0:102,VS10:94,VS20:88,VS30:84,VS40:81},
+  44:{VR10:116,V210:119,VR20:108,V220:111,VAPP0:135,VAPP20:115,VAPP30:110,VAPP40:107,VS0:104,VS10:95,VS20:89,VS30:85,VS40:81},
+  45:{VR10:117,V210:120,VR20:109,V220:112,VAPP0:136,VAPP20:117,VAPP30:111,VAPP40:108,VS0:105,VS10:96,VS20:90,VS30:86,VS40:82},
+  46:{VR10:118,V210:121,VR20:110,V220:113,VAPP0:137,VAPP20:118,VAPP30:113,VAPP40:109,VS0:106,VS10:97,VS20:91,VS30:86,VS40:83},
+  47:{VR10:120,V210:123,VR20:112,V220:114,VAPP0:139,VAPP20:119,VAPP30:114,VAPP40:110,VS0:107,VS10:98,VS20:92,VS30:87,VS40:84},
+  48:{VR10:121,V210:124,VR20:113,V220:115,VAPP0:140,VAPP20:120,VAPP30:115,VAPP40:111,VS0:108,VS10:99,VS20:92,VS30:88,VS40:null},
+  49:{VR10:122,V210:125,VR20:114,V220:117,VAPP0:142,VAPP20:122,VAPP30:116,VAPP40:null,VS0:109,VS10:100,VS20:93,VS30:89,VS40:null},
+  50:{VR10:null,V210:126,VR20:null,V220:118,VAPP0:143,VAPP20:123,VAPP30:117,VAPP40:null,VS0:110,VS10:101,VS20:94,VS30:90,VS40:null},
+  51:{VR10:null,V210:127,VR20:null,V220:119,VAPP0:144,VAPP20:124,VAPP30:118,VAPP40:null,VS0:111,VS10:102,VS20:95,VS30:91,VS40:null}
+};
+
+const BEW = 30000; // fixed empty weight kg
+
+function interpolateSpeed(wKg, key) {
+  const tons = wKg / 1000;
+  const keys = Object.keys(speedTable).map(Number).sort((a,b)=>a-b);
+  if (tons <= keys[0]) return speedTable[keys[0]][key];
+  if (tons >= keys[keys.length-1]) return speedTable[keys[keys.length-1]][key];
+  let lo = keys[0], hi = keys[1];
+  for (let i=0;i<keys.length-1;i++) {
+    if (tons >= keys[i] && tons <= keys[i+1]) { lo=keys[i]; hi=keys[i+1]; break; }
+  }
+  const a = speedTable[lo][key], b = speedTable[hi][key];
+  if (a==null || b==null) return a ?? b;
+  return a + (b-a) * (tons-lo)/(hi-lo);
+}
+
+function densityAltitude(elevFt, oatC, qnh) {
+  const isa = 15 - elevFt * 0.0019812;
+  const pressAlt = elevFt + (1013.25 - qnh) * 30;
+  return pressAlt + 120 * (oatC - isa);
+}
+
+// Approximate takeoff pitch trim from weight
+// Manual has no published trim table – this is a practical estimate.
+// Reference: ~0 units (neutral) around 42 t. Heavier → more nose-up.
+function calcTakeoffTrim(towKg) {
+  // Typical range observed / used by community: -1.5 to +3.5 units
+  // Linear approximation centred at 42 000 kg = 0
+  const ref = 42000;
+  const units = ((towKg - ref) / 3000); // ~1 unit per 3 t
+  return Math.max(-2, Math.min(4, units));
+}
+
+// (optimum cruise altitude removed per request)
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// W&B + Trim + CG %MAC
+// Station %MAC positions (approximate MSFS EFB / typical high-wing transport)
+// Empty CG given as 28.0 %MAC
+const STATION = {
+  empty:  28.0,   // %MAC
+  crew:   20.0,   // cockpit – forward
+  fuel:   27.5,   // wing tanks – close to empty CG
+  pax1:   24.0,   // forward cargo station
+  pax2:   35.0    // aft cargo station
+};
+
+function calcWB() {
+  const crew  = +document.getElementById('crew').value || 0;
+  const fuel  = +document.getElementById('fuel').value || 0;
+  const p1    = +document.getElementById('payload1').value || 0;
+  const p2    = +document.getElementById('payload2').value || 0;
+
+  const tow = BEW + crew + fuel + p1 + p2;
+
+  // Moment sum in kg·%MAC
+  const moment =
+    BEW * STATION.empty +
+    crew * STATION.crew +
+    fuel * STATION.fuel +
+    p1   * STATION.pax1 +
+    p2   * STATION.pax2;
+
+  const cgMac = moment / tow;   // %MAC
+
+  const trim = calcTakeoffTrim(tow);
+  const trimStr = (trim >= 0 ? '+' : '') + trim.toFixed(1);
+
+  // Max altitude for this weight (absolute ceiling 28 000 ft per manual)
+  // Practical max decreases with weight – heavier → lower ceiling
+  // Approx: light ~26–28k, near MTOW ~18–20k
+  let maxAlt = 28000 - (tow - 30000) * 0.45;
+  maxAlt = Math.max(16000, Math.min(28000, maxAlt));
+  maxAlt = Math.round(maxAlt / 500) * 500; // round to 500 ft
+
+  const el = document.getElementById('wbResult');
+  el.style.display = 'block';
+
+  let status = tow > 51000 ? 'bad' : tow > 49000 ? 'warn' : 'ok';
+  // Envelope 20 – 36 %MAC
+  const envFwd = 20, envAft = 36;
+  let markerClass = '';
+  let cgLabel = 'Inside envelope (20–36 %MAC)';
+  if (cgMac < envFwd || cgMac > envAft) {
+    markerClass = 'out';
+    cgLabel = cgMac < envFwd
+      ? '⚠ FORWARD of envelope limit (20 %MAC)'
+      : '⚠ AFT of envelope limit (36 %MAC)';
+  } else if (cgMac < envFwd + 2 || cgMac > envAft - 2) {
+    markerClass = 'warn';
+    cgLabel = 'Near envelope limit – check carefully';
+  }
+  // Map CG to bar position (clamp slightly outside for visibility)
+  let markerPct = ((cgMac - envFwd) / (envAft - envFwd)) * 100;
+  markerPct = Math.max(-4, Math.min(104, markerPct));
+
+  let trimNote = '';
+  if (tow > 49150) trimNote = '\n<small class="warn">Weight > 49 150 kg → takeoff only allowed with 0° flaps (manual note)</small>';
+
+  el.innerHTML =
+    `Empty weight:          <b>30 000 kg</b>  @ 28.0 %MAC\n` +
+    `Cockpit crew:          <b>${crew.toFixed(0)} kg</b>  @ ${STATION.crew.toFixed(1)} %MAC\n` +
+    `Fuel:                  <b>${fuel.toFixed(0)} kg</b>  @ ${STATION.fuel.toFixed(1)} %MAC\n` +
+    `Payload Fwd (Sta 1):   <b>${p1.toFixed(0)} kg</b>  @ ${STATION.pax1.toFixed(1)} %MAC\n` +
+    `Payload Aft (Sta 2):   <b>${p2.toFixed(0)} kg</b>  @ ${STATION.pax2.toFixed(1)} %MAC\n` +
+    `────────────────────────────\n` +
+    `Takeoff Weight:        <b class="${status}">${tow.toFixed(0)} kg</b>  (MTOW 51 000 kg)\n\n` +
+    `CG:  <span class="trim-box">${cgMac.toFixed(1)} %MAC</span>\n` +
+    `<div class="cg-envelope">` +
+      `<div class="cg-envelope-fill" style="left:0;width:100%"></div>` +
+      `<div class="cg-envelope-scale"><span>20%</span><span>28%</span><span>36%</span></div>` +
+      `<div class="cg-marker ${markerClass}" style="left:${markerPct.toFixed(1)}%"></div>` +
+    `</div>` +
+    `<div class="cg-label">${cgLabel}</div>\n\n` +
+    `Takeoff Pitch Trim:\n` +
+    `<span class="trim-box">${trimStr}</span> units\n` +
+    `<small>(estimate – set on pitch trim wheel, then fine-tune in flight)</small>\n\n` +
+    `Max altitude (this weight):\n` +
+    `<span class="trim-box">${maxAlt.toLocaleString()} ft</span>\n` +
+    `<small>Absolute ceiling 28 000 ft (manual). Practical max falls with weight.</small>` +
+    trimNote;
+
+  // Push values to other tabs
+  document.getElementById('tow').value = Math.round(tow);
+  document.getElementById('spdW').value = Math.round(tow);
+  document.getElementById('cw').value = Math.round(tow - fuel * 0.25);
+  document.getElementById('lw').value = Math.round(tow - fuel * 0.6);
+}
+
+// Speeds
+function calcSpeeds() {
+  const w = +document.getElementById('spdW').value;
+  const flapsTO = +document.getElementById('spdFlapsTO').value;
+  const flapsLDG = +document.getElementById('spdFlapsLDG').value;
+  const vr = Math.round(interpolateSpeed(w, flapsTO===20 ? 'VR20' : 'VR10'));
+  const v2 = Math.round(interpolateSpeed(w, flapsTO===20 ? 'V220' : 'V210'));
+  const vapp = Math.round(interpolateSpeed(w, 'VAPP'+flapsLDG));
+  const vs = Math.round(interpolateSpeed(w, 'VS'+flapsLDG));
+  const vref = Math.round(interpolateSpeed(w, 'VAPP30'));
+  // Flap limit & extension speeds (same logic as landing section)
+  const vapp0  = Math.round(interpolateSpeed(w, 'VAPP0'));
+  const vapp20 = Math.round(interpolateSpeed(w, 'VAPP20'));
+  const vapp30 = Math.round(interpolateSpeed(w, 'VAPP30'));
+  const vapp40 = Math.round(interpolateSpeed(w, 'VAPP40') || vapp30 - 3);
+  const vs0    = Math.round(interpolateSpeed(w, 'VS0'));
+  const vs10   = Math.round(interpolateSpeed(w, 'VS10'));
+  const vs20   = Math.round(interpolateSpeed(w, 'VS20'));
+  const vs30   = Math.round(interpolateSpeed(w, 'VS30'));
+  const vs40   = Math.round(interpolateSpeed(w, 'VS40') || vs30 - 3);
+  const vfe10 = 180, vfe20 = 160, vfe30 = 130, vfe40 = 130;
+  const sel10 = Math.round(Math.min(vfe10 - 5, Math.max(vapp0 + 5, vs0 * 1.4)));
+  const sel20 = Math.round(Math.min(vfe20 - 5, Math.max(vapp20 + 8, vs10 * 1.35)));
+  const sel30 = Math.round(Math.min(vfe30 - 5, Math.max(vapp30 + 10, vs20 * 1.35)));
+  const sel40 = Math.round(Math.min(vfe40 - 5, Math.max(vapp40 + 10, vs30 * 1.3)));
+
+  // Takeoff flap retraction
+  const fr20to10 = Math.round(Math.max(v2 + 15, vs10 * 1.25 || v2 + 15));
+  const fr10to0  = Math.round(Math.max(v2 + 25, vs0 * 1.3));
+
+  const el = document.getElementById('spdResult');
+  el.style.display = 'block';
+  el.innerHTML = `Weight ${w} kg (${(w/1000).toFixed(1)} t)\n\n` +
+    `<b>Takeoff</b> flaps ${flapsTO}°\n` +
+    `  VR ≈ <b>${vr} kt</b> · V2 ≈ <b>${v2} kt</b>\n` +
+    `  Flap retraction: 20°→10° ≈ <b>${fr20to10} kt</b> · 10°→0° ≈ <b>${fr10to0} kt</b>\n\n` +
+    `<b>Landing</b> flaps ${flapsLDG}°\n` +
+    `  VAPP ≈ <b>${vapp} kt</b> · VS ≈ <b>${vs} kt</b> · VREF (30°) ≈ <b>${vref} kt</b>\n\n` +
+    `<b>MAX flap speeds (VFE)</b>\n` +
+    `  10° <b>${vfe10} kt</b> · 20° <b>${vfe20} kt</b> · 30° <b>${vfe30} kt</b> · 40° <b>${vfe40} kt</b>\n\n` +
+    `<b>Recommended flap extension</b> (this weight)\n` +
+    `  0° → 10° at <b>${sel10} kt</b> (max ${vfe10})\n` +
+    `  10° → 20° at <b>${sel20} kt</b> (max ${vfe20})\n` +
+    `  20° → 30° at <b>${sel30} kt</b> (max ${vfe30})\n` +
+    `  30° → 40° at <b>${sel40} kt</b> (max ${vfe40})\n` +
+    `  Stabilise at VAPP for selected landing flaps\n\n` +
+    `<small>VFE full flaps 130 kt from manual §10.1. Intermediate limits typical.\n` +
+    `+5 kt VAPP with 40 % spoilers · >49 150 kg takeoff only with 0° flaps</small>`;
+}
+
+// Surface condition factors (relative to dry)
+const rwyFactor = {
+  dry: 1.00,
+  wet: 1.30,      // typical wet runway factor
+  contam: 1.75    // contaminated (standing water / slush / snow) – conservative
+};
+
+// Takeoff
+function calcTO() {
+  const w = +document.getElementById('tow').value;
+  const flaps = +document.getElementById('flapsTO').value;
+  const elev = +document.getElementById('elevTO').value;
+  const oat = +document.getElementById('oatTO').value;
+  const qnh = +document.getElementById('qnhTO').value;
+  const hw = +document.getElementById('hwTO').value;
+  const slope = +document.getElementById('slopeTO').value;
+  const rwy = document.getElementById('rwyTO').value;
+  const wm = +document.getElementById('wmTO').value;
+
+  const da = densityAltitude(elev, oat, qnh);
+
+  // Base TODR calibrated to flaps 20° ≈ 980 m at 45 t SL ISA
+  let base = 980;
+  // Flap effect: less flap → longer takeoff
+  if (flaps === 10) base *= 1.12;
+  if (flaps === 0)  base *= 1.28;
+  if (wm) base *= 0.88;
+
+  const wF = Math.pow(w / 45000, 1.75);
+  const daF = 1 + Math.max(0, da) / 28000;
+  let tod = base * wF * daF;
+  tod *= (1 - 0.012 * Math.max(0, hw));
+  tod *= (1 + 0.08 * slope);
+  tod *= rwyFactor[rwy] || 1.0;
+
+  // V-speeds depend on flap setting
+  const vrKey = flaps === 20 ? 'VR20' : (flaps === 10 ? 'VR10' : 'VR10'); // 0° uses 10° table as closest
+  const v2Key = flaps === 20 ? 'V220' : (flaps === 10 ? 'V210' : 'V210');
+  const vr = Math.round(interpolateSpeed(w, vrKey));
+  const v2 = Math.round(interpolateSpeed(w, v2Key));
+  const enroute = Math.round(v2 * 1.17);
+  // Flap retraction speeds (practical schedule based on V2 / VS)
+  // 20°→10°: V2 + 15 kt · 10°→0°: V2 + 25 kt (or 1.3×VS0 if higher)
+  const vs0 = Math.round(interpolateSpeed(w, 'VS0') || 100);
+  const fr20to10 = Math.round(Math.max(v2 + 15, interpolateSpeed(w, 'VS10') * 1.25 || v2 + 15));
+  const fr10to0  = Math.round(Math.max(v2 + 25, vs0 * 1.3));
+  const trim = calcTakeoffTrim(w);
+  const trimStr = (trim >= 0 ? '+' : '') + trim.toFixed(1);
+
+  let flapsWarning = '';
+  if (w > 49150 && flaps !== 0) {
+    flapsWarning = '\n<span class="warn">⚠ Weight > 49 150 kg → manual requires 0° flaps for takeoff</span>';
+  }
+
+  const rwyLabel = { dry: 'Dry', wet: 'Wet', contam: 'Contaminated' }[rwy];
+
+  const rwyLen = +document.getElementById('rwyLenTO').value || 0;
+  const nadp = document.getElementById('nadpTO').value;
+  const todR = Math.round(tod);
+  let barPct = rwyLen > 0 ? Math.min(100, (todR / rwyLen) * 100) : 50;
+  let barClass = 'ok';
+  let statusClass = 'ok';
+  let statusText = '';
+  if (rwyLen <= 0) {
+    barClass = '';
+    statusClass = 'na';
+    statusText = 'Enter runway length to compare';
+  } else if (todR > rwyLen) {
+    barClass = 'over';
+    statusClass = 'over';
+    statusText = `⚠ TODR exceeds runway by ${todR - rwyLen} m`;
+  } else {
+    statusText = `✓ Margin: ${rwyLen - todR} m remaining`;
+  }
+
+  // NADP profile text (EASA Doc 8168 / ICAO PANS-OPS)
+  let nadpText = 'Standard climb – no noise abatement';
+  if (nadp === 'nadp1') {
+    nadpText = 'NADP 1 (EASA): Thrust reduction at <b>1 000 ft AGL</b> · Acceleration at <b>3 000 ft AGL</b>';
+  } else if (nadp === 'nadp2') {
+    nadpText = 'NADP 2 (EASA): Thrust reduction + acceleration at <b>1 000 ft AGL</b>';
+  }
+
+  // Build SVG profile (height vs distance, schematic)
+  // Stages: ground roll → 50 ft screen → climb to thrust-red → accel → further climb
+  const svg = buildNadpProfile(nadp, todR);
+
+  const el = document.getElementById('toResult');
+  el.style.display = 'block';
+  el.innerHTML = `Density Altitude: <b>${Math.round(da)} ft</b>\n` +
+    `Flaps: <b>${flaps}°</b> · Surface: <b>${rwyLabel}</b>\n` +
+    `TODR (to 50 ft): <b>${todR} m</b>` +
+    (rwyLen > 0 ? `  ·  Available: <b>${rwyLen} m</b>` : '') + `\n` +
+    `VR ≈ <b>${vr} kt</b> · V2 ≈ <b>${v2} kt</b> · En-route climb ≈ <b>${enroute} kt</b>\n` +
+    `Flap retraction: 20°→10° ≈ <b>${fr20to10} kt</b>  ·  10°→0° ≈ <b>${fr10to0} kt</b>\n` +
+    `Takeoff Trim: <b>${trimStr}</b> units\n` +
+    `Power: Full throttle ${wm ? '+ Water-Methanol' : '(no W/M)'}\n` +
+    `Noise: ${nadpText}` +
+    flapsWarning +
+    `\n<small>Calibrated to manual examples (p.92). Verify on official charts.</small>` +
+    `<div class="rwy-graphic">` +
+      `<div class="rwy-graphic-title">Takeoff run · TODR vs runway</div>` +
+      `<div class="rwy-track">` +
+        `<div class="rwy-required ${barClass}" style="width:${barPct.toFixed(1)}%"></div>` +
+        `<div class="rwy-ac" style="left:${Math.min(barPct, 98).toFixed(1)}%">✈</div>` +
+      `</div>` +
+      `<div class="rwy-labels"><span>0 m</span><span>${todR} m TODR</span><span>${rwyLen > 0 ? rwyLen + ' m' : '—'}</span></div>` +
+      `<div class="rwy-status ${statusClass}">${statusText}</div>` +
+    `</div>` +
+    `<div class="profile-view">` +
+      `<div class="profile-title">Takeoff profile · 50 ft screen + NADP climb</div>` +
+      svg +
+      `<div class="profile-legend">` +
+        `<span class="leg-to">Takeoff to 50 ft</span>` +
+        `<span class="leg-climb">Climb (V2+)</span>` +
+        `<span class="leg-reduce">Thrust reduction</span>` +
+        `<span class="leg-accel">Acceleration</span>` +
+      `</div>` +
+    `</div>`;
+}
+
+// Schematic NADP profile SVG (EASA Doc 8168)
+function buildNadpProfile(nadp, todR) {
+  const W = 520, H = 200;
+  const padL = 48, padR = 16, padT = 18, padB = 36;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // Vertical scale 0–3500 ft AGL for NADP1, 0–2000 for others
+  const maxFt = nadp === 'nadp1' ? 3500 : (nadp === 'nadp2' ? 2000 : 1500);
+  // Horizontal: schematic distances (not to scale with TODR, relative segments)
+  // Segments in relative "distance units"
+  let pts = []; // {xRel, ft, label, color}
+  // Ground / TODR end at 50 ft
+  pts.push({ x: 0, ft: 0, label: '', color: '#c4a35a' });
+  pts.push({ x: 0.12, ft: 50, label: '50 ft', color: '#c4a35a' });
+
+  if (nadp === 'nadp1') {
+    // Climb at takeoff thrust to 1000 ft
+    pts.push({ x: 0.38, ft: 1000, label: '1 000 ft\nThrust red.', color: '#7cb87c' });
+    // Continue climb reduced thrust to 3000 ft
+    pts.push({ x: 0.62, ft: 3000, label: '3 000 ft\nAccel.', color: '#d4a017' });
+    // Accelerate / clean-up then climb
+    pts.push({ x: 0.78, ft: 3100, label: '', color: '#5b9bd5' });
+    pts.push({ x: 1.0, ft: 3500, label: 'Climb', color: '#7cb87c' });
+  } else if (nadp === 'nadp2') {
+    // Climb to 1000 ft then thrust red + accel together
+    pts.push({ x: 0.40, ft: 1000, label: '1 000 ft\nThrust red.\n+ Accel.', color: '#d4a017' });
+    pts.push({ x: 0.58, ft: 1050, label: '', color: '#5b9bd5' });
+    pts.push({ x: 1.0, ft: 2000, label: 'Climb', color: '#7cb87c' });
+  } else {
+    // Standard – continuous climb
+    pts.push({ x: 0.45, ft: 800, label: '', color: '#7cb87c' });
+    pts.push({ x: 1.0, ft: 1500, label: 'Climb', color: '#7cb87c' });
+  }
+
+  function xy(p) {
+    const x = padL + p.x * plotW;
+    const y = padT + plotH - (p.ft / maxFt) * plotH;
+    return [x, y];
+  }
+
+  // Path
+  let d = '';
+  pts.forEach((p, i) => {
+    const [x, y] = xy(p);
+    d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+  });
+
+  // Grid lines at key altitudes
+  const altMarks = nadp === 'nadp1' ? [0, 50, 1000, 3000] :
+                   nadp === 'nadp2' ? [0, 50, 1000] : [0, 50, 1000];
+
+  let grid = '';
+  altMarks.forEach(ft => {
+    const y = padT + plotH - (ft / maxFt) * plotH;
+    grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#3d4636" stroke-width="1" stroke-dasharray="3,3"/>`;
+    grid += `<text x="${padL - 6}" y="${y + 3}" text-anchor="end" fill="#9a9588" font-size="9" font-family="monospace">${ft === 0 ? '0' : ft}</text>`;
+  });
+
+  // Screen height marker (50 ft) vertical tick
+  const [sx, sy] = xy(pts[1]);
+  let markers = '';
+  pts.forEach(p => {
+    if (!p.label) return;
+    const [x, y] = xy(p);
+    markers += `<circle cx="${x}" cy="${y}" r="3.5" fill="${p.color}" stroke="#121610" stroke-width="1"/>`;
+    const lines = p.label.split('\n');
+    lines.forEach((ln, i) => {
+      markers += `<text x="${x}" y="${y - 10 - (lines.length - 1 - i) * 10}" text-anchor="middle" fill="${p.color}" font-size="9" font-family="sans-serif" font-weight="600">${ln}</text>`;
+    });
+  });
+
+  // Ground line label
+  const groundY = padT + plotH;
+  let svg = `<svg class="profile-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += grid;
+  svg += `<line x1="${padL}" y1="${groundY}" x2="${W - padR}" y2="${groundY}" stroke="#4a5340" stroke-width="2"/>`;
+  svg += `<text x="${padL}" y="${H - 8}" fill="#9a9588" font-size="9" font-family="monospace">Lift-off</text>`;
+  svg += `<text x="${W - padR}" y="${H - 8}" text-anchor="end" fill="#9a9588" font-size="9" font-family="monospace">Distance →</text>`;
+  svg += `<text x="12" y="${padT + plotH / 2}" fill="#9a9588" font-size="9" font-family="monospace" transform="rotate(-90 12 ${padT + plotH / 2})">ft AGL</text>`;
+  // 50 ft screen annotation
+  svg += `<line x1="${sx}" y1="${sy}" x2="${sx}" y2="${groundY}" stroke="#c4a35a" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>`;
+  svg += `<path d="${d}" fill="none" stroke="#c4a35a" stroke-width="2.5" stroke-linejoin="round"/>`;
+  // Colour the segments more distinctly by overlaying multi-color path is complex; single path + markers is enough
+  svg += markers;
+  svg += `</svg>`;
+  return svg;
+}
+
+// Landing
+function calcLDG() {
+  const w = +document.getElementById('lw').value;
+  const elev = +document.getElementById('elevLDG').value;
+  const oat = +document.getElementById('oatLDG').value;
+  const qnh = +document.getElementById('qnhLDG').value;
+  const hw = +document.getElementById('hwLDG').value;
+  const flaps = +document.getElementById('flapsLDG').value;
+  const rwy = document.getElementById('rwyLDG').value;
+  const short = +document.getElementById('shortLDG').value;
+
+  const da = densityAltitude(elev, oat, qnh);
+  let base = short ? 550 : 780;
+  if (flaps === 40) base *= 0.95;
+  const wF = Math.pow(w / 42000, 1.55);
+  const daF = 1 + Math.max(0, da) / 30000;
+  let ldr = base * wF * daF;
+  ldr *= (1 - 0.018 * Math.max(0, hw));
+  ldr *= rwyFactor[rwy] || 1.0;
+
+  const vapp = Math.round(interpolateSpeed(w, 'VAPP'+flaps));
+  const touch = Math.round(vapp * 0.92);
+  // Approach / stall speeds by flap (manual p.89)
+  const vapp0  = Math.round(interpolateSpeed(w, 'VAPP0'));
+  const vapp20 = Math.round(interpolateSpeed(w, 'VAPP20'));
+  const vapp30 = Math.round(interpolateSpeed(w, 'VAPP30'));
+  const vapp40 = Math.round(interpolateSpeed(w, 'VAPP40') || vapp30 - 3);
+  const vs0    = Math.round(interpolateSpeed(w, 'VS0'));
+  const vs10   = Math.round(interpolateSpeed(w, 'VS10'));
+  const vs20   = Math.round(interpolateSpeed(w, 'VS20'));
+  const vs30   = Math.round(interpolateSpeed(w, 'VS30'));
+  const vs40   = Math.round(interpolateSpeed(w, 'VS40') || vs30 - 3);
+  // MAX flap speeds (VFE) – manual: full flaps 130 kt; intermediate typical limits
+  const vfe10 = 180;
+  const vfe20 = 160;
+  const vfe30 = 130;
+  const vfe40 = 130;
+  // Recommended speeds to SELECT each flap (slow to this speed, then set flaps)
+  // Progressive: slightly above next VAPP / 1.4×VS so aircraft is stable before extension
+  const sel10 = Math.round(Math.min(vfe10 - 5, Math.max(vapp0 + 5, vs0 * 1.4)));
+  const sel20 = Math.round(Math.min(vfe20 - 5, Math.max(vapp20 + 8, vs10 * 1.35)));
+  const sel30 = Math.round(Math.min(vfe30 - 5, Math.max(vapp30 + 10, vs20 * 1.35)));
+  const sel40 = Math.round(Math.min(vfe40 - 5, Math.max(vapp40 + 10, vs30 * 1.3)));
+  // Build sequence down to selected landing flaps
+  let flapSeq = '';
+  if (flaps >= 10 || flaps === 0) {
+    // always show path relevant to chosen landing flaps
+  }
+  const seqParts = [];
+  seqParts.push(`0° → 10° at <b>${sel10} kt</b> (max ${vfe10})`);
+  if (flaps >= 20) seqParts.push(`10° → 20° at <b>${sel20} kt</b> (max ${vfe20})`);
+  if (flaps >= 30) seqParts.push(`20° → 30° at <b>${sel30} kt</b> (max ${vfe30})`);
+  if (flaps >= 40) seqParts.push(`30° → 40° at <b>${sel40} kt</b> (max ${vfe40})`);
+  flapSeq = seqParts.join('\n  ');
+
+  // Regulatory / dispatch factors (unfactored → factored)
+  // Dry: 1.67 (60 % rule). Wet / contaminated: higher.
+  const factorMap = { dry: 1.67, wet: 1.92, contam: 2.30 };
+  const factor = factorMap[rwy] || 1.67;
+  const ldrFactored = ldr * factor;
+
+  const rwyLabel = { dry: 'Dry', wet: 'Wet', contam: 'Contaminated' }[rwy];
+
+  const rwyLen = +document.getElementById('rwyLenLDG').value || 0;
+  const ldrU = Math.round(ldr);
+  const ldrF = Math.round(ldrFactored);
+  // Graph uses factored (dispatch) distance
+  let barPct = rwyLen > 0 ? Math.min(100, (ldrF / rwyLen) * 100) : 50;
+  let barClass = 'ok';
+  let statusClass = 'ok';
+  let statusText = '';
+  if (rwyLen <= 0) {
+    barClass = '';
+    statusClass = 'na';
+    statusText = 'Enter runway length to compare';
+  } else if (ldrF > rwyLen) {
+    barClass = 'over';
+    statusClass = 'over';
+    statusText = `⚠ Factored LDR exceeds runway by ${ldrF - rwyLen} m`;
+  } else {
+    statusText = `✓ Margin: ${rwyLen - ldrF} m remaining (factored)`;
+  }
+
+  const el = document.getElementById('ldgResult');
+  el.style.display = 'block';
+  el.innerHTML = `Density Altitude: <b>${Math.round(da)} ft</b>\n` +
+    `Flaps: <b>${flaps}°</b> · Surface: <b>${rwyLabel}</b>\n` +
+    `Unfactored LDR:  <b>${ldrU} m</b>\n` +
+    `Factored LDR:    <b>${ldrF} m</b>  (×${factor.toFixed(2)})` +
+    (rwyLen > 0 ? `  ·  Available: <b>${rwyLen} m</b>` : '') + `\n` +
+    `  (${short ? 'short-field + reverse' : 'normal no reverse'})\n` +
+    `VAPP ≈ <b>${vapp} kt</b> · Touch-down ≈ <b>${touch} kt</b> · VS30 ≈ <b>${vs30} kt</b>\n\n` +
+    `<b>MAX flap speeds (VFE)</b>\n` +
+    `  10° <b>${vfe10} kt</b>  ·  20° <b>${vfe20} kt</b>  ·  30° <b>${vfe30} kt</b>  ·  40° <b>${vfe40} kt</b>\n\n` +
+    `<b>Recommended flap extension schedule</b> (this weight → flaps ${flaps}°)\n` +
+    `  ${flapSeq}\n` +
+    `  Then stabilise at VAPP <b>${vapp} kt</b>\n` +
+    `<small>Unfactored = chart distance. Factored = dispatch (dry ×1.67 / wet ×1.92 / contam ×2.30).\n` +
+    `Manual charts pp.106–108.</small>` +
+    `<div class="rwy-graphic">` +
+      `<div class="rwy-graphic-title">Landing roll · Factored LDR vs runway</div>` +
+      `<div class="rwy-track">` +
+        `<div class="rwy-required ${barClass}" style="width:${barPct.toFixed(1)}%"></div>` +
+        `<div class="rwy-ac" style="left:${Math.min(barPct, 98).toFixed(1)}%">✈</div>` +
+      `</div>` +
+      `<div class="rwy-labels"><span>0 m</span><span>${ldrF} m factored</span><span>${rwyLen > 0 ? rwyLen + ' m' : '—'}</span></div>` +
+      `<div class="rwy-status ${statusClass}">${statusText}</div>` +
+    `</div>`;
+}
+
+// Cruise
+function calcCruise() {
+  const w = +document.getElementById('cw').value;
+  const alt = +document.getElementById('cAlt').value;
+  const oatDev = +document.getElementById('cOat').value;
+  const rpm = +document.getElementById('power').value;
+
+  const data = {
+    0:     {13500:{tas:255,ff:1450},12500:{tas:245,ff:1300},11500:{tas:235,ff:1150},10500:{tas:220,ff:1000}},
+    5000:  {13500:{tas:260,ff:1350},12500:{tas:250,ff:1200},11500:{tas:240,ff:1080},10500:{tas:225,ff:950}},
+    10000: {13500:{tas:265,ff:1250},12500:{tas:255,ff:1120},11500:{tas:245,ff:1000},10500:{tas:230,ff:880}},
+    16000: {13500:{tas:270,ff:1150},12500:{tas:260,ff:1050},11500:{tas:250,ff:930},10500:{tas:235,ff:820}},
+    20000: {13500:{tas:265,ff:1050},12500:{tas:255,ff:960},11500:{tas:245,ff:860},10500:{tas:230,ff:760}}
+  };
+  const d = data[alt][rpm] || {tas:250,ff:1100};
+  let tas = d.tas * Math.sqrt(43000 / w) * (1 + oatDev * 0.0015);
+  let ff = d.ff * Math.pow(w / 43000, 0.7);
+
+  const el = document.getElementById('cruiseResult');
+  el.style.display = 'block';
+  el.innerHTML = `Altitude ${alt} ft · N1 <b>${rpm} rpm</b>\n` +
+    `Approx TAS: <b>${Math.round(tas)} kt</b>\n` +
+    `Fuel flow: ≈ <b>${Math.round(ff)} kg/h</b> (total, air-bleed)\n` +
+    `<small>Derived from manual level-flight charts (§11.4).</small>`;
+}
+
+// ===== Fuel Planning (VFR / IFR) =====
+const MAX_FUEL = 23830;   // kg
+const MTOW = 51000;       // kg
+const MLW = 47000;        // kg (approx from manual)
+
+function getCruiseFF(alt, rpm) {
+  const table = {
+    10000: {13500:1250, 12500:1120, 11500:1000},
+    16000: {13500:1150, 12500:1050, 11500:930},
+    20000: {13500:1050, 12500:960,  11500:860}
+  };
+  return (table[alt] && table[alt][rpm]) || 1100;
+}
+
+function getCruiseTAS(alt, rpm) {
+  const table = {
+    10000: {13500:265, 12500:255, 11500:245},
+    16000: {13500:270, 12500:260, 11500:250},
+    20000: {13500:265, 12500:255, 11500:245}
+  };
+  return (table[alt] && table[alt][rpm]) || 250;
+}
+
+function toggleFuelRules() {
+  const rules = document.getElementById('fuelRules').value;
+  document.getElementById('ifrOnly').style.display = rules === 'ifr' ? 'block' : 'none';
+  document.getElementById('vfrOnly').style.display = rules === 'vfr' ? 'block' : 'none';
+  document.getElementById('taxiFuel').value = 240;
+}
+
+function toggleTripMode() {
+  const mode = document.getElementById('tripMode').value;
+  document.getElementById('tripDistBox').style.display = mode === 'distance' ? 'block' : 'none';
+  document.getElementById('tripTimeBox').style.display = mode === 'time' ? 'block' : 'none';
+}
+
+// Tank capacities (liters) per wing – AzurPoly / C-160R
+// A: 5740 middle · B: 4285 outer · C: 4815 inner (transfer only)
+const TANK_A_L = 5740;
+const TANK_B_L = 4285;
+const TANK_C_L = 4815;
+const FUEL_DENSITY = 23830 / 29680; // kg/L ≈ 0.803 from manual
+
+// Distribute total fuel kg – PER SIDE (per wing)
+// Equal split A and B if one B tank would exceed 1000 kg; otherwise A only.
+// If A and B are full, use C.
+function distributeTanks(fuelKg) {
+  const totalL = fuelKg / FUEL_DENSITY;
+  const perSideL = totalL / 2;
+  const minBKgSide = 1000; // use B only if that side's B would exceed 1000 kg
+
+  function fillSide(sideL) {
+    let a = 0, b = 0, c = 0;
+    const maxA = TANK_A_L, maxB = TANK_B_L, maxC = TANK_C_L;
+    const maxAB = maxA + maxB;
+
+    if (sideL <= 0) return { a, b, c };
+
+    // Candidate equal split of AB portion
+    const abPortion = Math.min(sideL, maxAB);
+    let eqA = Math.min(maxA, abPortion / 2);
+    let eqB = Math.min(maxB, abPortion - eqA);
+    // Rebalance if one tank capped
+    if (eqA + eqB < abPortion) {
+      if (eqA < maxA) eqA = Math.min(maxA, abPortion - eqB);
+      if (eqB < maxB) eqB = Math.min(maxB, abPortion - eqA);
+    }
+
+    const bKg = eqB * FUEL_DENSITY;
+
+    if (bKg > minBKgSide) {
+      // Equal A and B
+      a = eqA;
+      b = eqB;
+    } else {
+      // Use A only (B not needed)
+      if (abPortion <= maxA) {
+        a = abPortion;
+        b = 0;
+      } else {
+        // A full – must spill into B even if under 1000 kg
+        a = maxA;
+        b = Math.min(maxB, abPortion - a);
+      }
+    }
+
+    const remain = sideL - a - b;
+    if (remain > 0.5) c = Math.min(maxC, remain);
+
+    return { a, b, c };
+  }
+
+  const L = fillSide(perSideL);
+  const R = fillSide(perSideL);
+  const sumL = L.a + L.b + L.c + R.a + R.b + R.c;
+
+  return {
+    leftA: L.a, rightA: R.a,
+    leftB: L.b, rightB: R.b,
+    leftC: L.c, rightC: R.c,
+    totalL: sumL,
+    totalKg: sumL * FUEL_DENSITY,
+    usedB: L.b + R.b > 1,
+    usedC: L.c + R.c > 1
+  };
+}
+
+function tankBar(name, qtyL, capL, cls) {
+  const pct = Math.min(100, (qtyL / capL) * 100);
+  const kg = Math.round(qtyL * FUEL_DENSITY);
+  return `<div class="tank-bar-row">` +
+    `<div class="tank-name">${name}</div>` +
+    `<div class="tank-bar-bg"><div class="tank-bar-fill ${cls}" style="width:${pct.toFixed(1)}%"></div></div>` +
+    `<div class="tank-qty">${Math.round(qtyL)} L<br>${kg} kg</div>` +
+  `</div>`;
+}
+
+function renderTankGraphic(d) {
+  let note = 'A primary';
+  if (d.usedB && d.usedC) note = 'Equal A + B · C used – transfer as required';
+  else if (d.usedB) note = 'Equal A + B (B > 1000 kg per side)';
+  else if (d.usedC) note = 'A full · C used';
+  else note = 'A only (B would be ≤ 1000 kg per side)';
+  return `<div class="tank-graphic">` +
+    `<div class="tank-title">Tank distribution · per wing · equal A+B if B&gt;1000 kg/side · else A only · C if full</div>` +
+    `<div class="tank-wings">` +
+      `<div class="tank-wing">` +
+        `<div class="tank-wing-label">Left wing</div>` +
+        tankBar('A', d.leftA, TANK_A_L, 'a') +
+        tankBar('B', d.leftB, TANK_B_L, 'b') +
+        tankBar('C', d.leftC, TANK_C_L, d.leftC > 1 ? 'c' : 'empty') +
+      `</div>` +
+      `<div class="tank-fuselage">FUSE</div>` +
+      `<div class="tank-wing">` +
+        `<div class="tank-wing-label">Right wing</div>` +
+        tankBar('A', d.rightA, TANK_A_L, 'a') +
+        tankBar('B', d.rightB, TANK_B_L, 'b') +
+        tankBar('C', d.rightC, TANK_C_L, d.rightC > 1 ? 'c' : 'empty') +
+      `</div>` +
+    `</div>` +
+    `<div class="tank-summary">${Math.round(d.totalL)} L · ${Math.round(d.totalKg)} kg · ${note}</div>` +
+  `</div>`;
+}
+
+function calcFuel() {
+  const rules = document.getElementById('fuelRules').value;
+  const tripMode = document.getElementById('tripMode').value;
+  const alt = +document.getElementById('fuelAlt').value;
+  const rpm = +document.getElementById('fuelPower').value;
+  let tas = +document.getElementById('fuelTas').value;
+  const altDist = +document.getElementById('altDist').value || 0;
+  const taxi = +document.getElementById('taxiFuel').value || 240;
+
+  if (!tas || tas <= 0) tas = getCruiseTAS(alt, rpm);
+  const ff = getCruiseFF(alt, rpm);
+  const holdFF = ff * 0.75;
+
+  const climbFuel = 350;
+  const descentFuel = 80;
+
+  let tripDist = 0;
+  let cruiseTimeH = 0;
+  let tripInputLabel = '';
+
+  if (tripMode === 'time') {
+    const h = +document.getElementById('tripHours').value || 0;
+    const m = +document.getElementById('tripMins').value || 0;
+    cruiseTimeH = h + m / 60;
+    tripDist = cruiseTimeH * tas; // equivalent distance
+    tripInputLabel = `Time ${h} h ${m.toString().padStart(2,'0')} min`;
+  } else {
+    tripDist = +document.getElementById('tripDist').value || 0;
+    cruiseTimeH = tas > 0 ? tripDist / tas : 0;
+    tripInputLabel = `Distance ${tripDist} NM`;
+  }
+
+  const cruiseFuel = cruiseTimeH * ff;
+  const tripFuel = climbFuel + cruiseFuel + descentFuel;
+
+  const altTimeH = altDist / (tas * 0.95);
+  const alternateFuel = altDist > 0 ? (altTimeH * ff + 120) : 0;
+
+  let contingency = 0;
+  let finalReserve = 0;
+  let reserveLabel = '';
+  let breakdownExtra = '';
+
+  if (rules === 'ifr') {
+    const contPct = +document.getElementById('contPct').value || 5;
+    const finalMin = +document.getElementById('finalMin').value || 30;
+    contingency = tripFuel * (contPct / 100);
+    finalReserve = (finalMin / 60) * holdFF;
+    reserveLabel = `Final reserve (${finalMin} min hold)`;
+    breakdownExtra =
+      `Contingency (${contPct}%):           <b>${Math.round(contingency)} kg</b>\n` +
+      `${reserveLabel}: <b>${Math.round(finalReserve)} kg</b>\n`;
+  } else {
+    // VFR: trip + alternate + fixed time reserve (30 or 45 min)
+    const vfrMin = +document.getElementById('vfrReserve').value || 30;
+    finalReserve = (vfrMin / 60) * holdFF;
+    reserveLabel = `VFR reserve (${vfrMin} min)`;
+    breakdownExtra = `${reserveLabel}:            <b>${Math.round(finalReserve)} kg</b>\n`;
+  }
+
+  // Flight time (trip + alternate leg estimate)
+  const tripTimeH = cruiseTimeH + 0.35; // + climb/descent allowance ~21 min
+  const altTimeTotalH = altDist > 0 ? altTimeH + 0.15 : 0;
+  const totalTimeH = tripTimeH + (rules === 'ifr' ? ( +document.getElementById('finalMin').value || 30) / 60 * 0 : 0);
+  // Display trip flight time primarily; note alternate separately
+  const ftH = Math.floor(tripTimeH);
+  const ftM = Math.round((tripTimeH - ftH) * 60);
+  const flightTimeStr = ftH > 0 ? `${ftH} h ${ftM.toString().padStart(2,'0')} min` : `${ftM} min`;
+  const altFtH = Math.floor(altTimeTotalH);
+  const altFtM = Math.round((altTimeTotalH - altFtH) * 60);
+  const altTimeStr = altDist > 0
+    ? (altFtH > 0 ? `${altFtH} h ${altFtM.toString().padStart(2,'0')} min` : `${altFtM} min`)
+    : '—';
+
+  let totalFuel = tripFuel + contingency + alternateFuel + finalReserve + taxi;
+  totalFuel = Math.ceil(totalFuel / 10) * 10;
+
+  const fuelUsed = Math.min(totalFuel, MAX_FUEL);
+  const maxPayloadMTOW = MTOW - BEW - fuelUsed;
+  const landingFuel = finalReserve + alternateFuel * 0.5 + contingency * 0.3;
+  const maxPayloadMLW = MLW - BEW - landingFuel;
+  const maxPayload = Math.max(0, Math.min(maxPayloadMTOW, maxPayloadMLW, 16000));
+
+  const fuelStatus = totalFuel > MAX_FUEL ? 'bad' : 'ok';
+  const rulesLabel = rules === 'ifr' ? 'IFR' : 'VFR';
+
+  const el = document.getElementById('fuelResult');
+  el.style.display = 'block';
+  el.innerHTML =
+    `<b>Fuel Breakdown (${rulesLabel})</b>\n` +
+    `Trip fuel (climb+cruise+descent):  <b>${Math.round(tripFuel)} kg</b>\n` +
+    `  · ${tripInputLabel} · TAS ${Math.round(tas)} kt · FF ≈ ${ff} kg/h\n` +
+    `  · Flight time ≈ <b>${flightTimeStr}</b>` +
+    (tripMode === 'time' ? ` · equiv. ${Math.round(tripDist)} NM` : '') + `\n` +
+    breakdownExtra +
+    `Alternate (${altDist} NM):           <b>${Math.round(alternateFuel)} kg</b>  ·  time ≈ ${altTimeStr}\n` +
+    `Taxi:                              <b>${Math.round(taxi)} kg</b>\n` +
+    `────────────────────────────\n` +
+    `TOTAL FUEL REQUIRED:               <b class="${fuelStatus}">${totalFuel} kg</b>` +
+    (totalFuel > MAX_FUEL ? '  <span class="bad">(exceeds max fuel 23 830 kg!)</span>' : '') + `\n\n` +
+    `<b>Maximum Payload for this flight</b>\n` +
+    `<span class="trim-box">${Math.round(maxPayload).toLocaleString()} kg</span>\n` +
+    `<small>Limited by MTOW 51 000 kg and estimated landing weight.\n` +
+    `Empty weight 30 000 kg · Max fuel capacity 23 830 kg.</small>`;
+
+  document.getElementById('fuel').value = Math.min(totalFuel, MAX_FUEL);
+
+  // Tank distribution graphic
+  const dist = distributeTanks(Math.min(totalFuel, MAX_FUEL));
+  el.innerHTML += renderTankGraphic(dist);
+}
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'block';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Auto-calculate on load
+calcWB();
+</script>
+</body>
+</html>
