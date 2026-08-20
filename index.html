@@ -557,9 +557,30 @@
           </div>
           <label>Cruise Altitude (ft)</label>
           <select id="fuelAlt">
+            <option value="5000">5 000 ft</option>
+            <option value="6000">6 000 ft</option>
+            <option value="7000">7 000 ft</option>
+            <option value="8000">8 000 ft</option>
+            <option value="9000">9 000 ft</option>
             <option value="10000">10 000 ft</option>
+            <option value="11000">11 000 ft</option>
+            <option value="12000">12 000 ft</option>
+            <option value="13000">13 000 ft</option>
+            <option value="14000">14 000 ft</option>
+            <option value="15000">15 000 ft</option>
             <option value="16000" selected>16 000 ft</option>
+            <option value="17000">17 000 ft</option>
+            <option value="18000">18 000 ft</option>
+            <option value="19000">19 000 ft</option>
             <option value="20000">20 000 ft</option>
+            <option value="21000">21 000 ft</option>
+            <option value="22000">22 000 ft</option>
+            <option value="23000">23 000 ft</option>
+            <option value="24000">24 000 ft</option>
+            <option value="25000">25 000 ft</option>
+            <option value="26000">26 000 ft</option>
+            <option value="27000">27 000 ft</option>
+            <option value="28000">28 000 ft</option>
           </select>
           <label>Cruise N1 (rpm)</label>
           <select id="fuelPower">
@@ -708,17 +729,45 @@
   <div class="panel" id="panel-cruise">
     <div class="card">
       <h2>Cruise Performance & Power Settings</h2>
+      <div class="row" style="margin-bottom:0.75rem">
+        <div>
+          <label>Rules</label>
+          <select id="cruiseRules" onchange="toggleCruiseRules()">
+            <option value="ifr" selected>IFR</option>
+            <option value="vfr">VFR</option>
+          </select>
+        </div>
+      </div>
       <div class="grid">
         <div>
           <label>Cruise Weight (kg)</label>
           <input type="number" id="cw" value="43000" step="100">
           <label>Pressure Altitude (ft)</label>
           <select id="cAlt">
-            <option value="0">0 ft</option>
             <option value="5000">5 000 ft</option>
+            <option value="6000">6 000 ft</option>
+            <option value="7000">7 000 ft</option>
+            <option value="8000">8 000 ft</option>
+            <option value="9000">9 000 ft</option>
             <option value="10000">10 000 ft</option>
+            <option value="11000">11 000 ft</option>
+            <option value="12000">12 000 ft</option>
+            <option value="13000">13 000 ft</option>
+            <option value="14000">14 000 ft</option>
+            <option value="15000">15 000 ft</option>
             <option value="16000" selected>16 000 ft</option>
+            <option value="17000">17 000 ft</option>
+            <option value="18000">18 000 ft</option>
+            <option value="19000">19 000 ft</option>
             <option value="20000">20 000 ft</option>
+            <option value="21000">21 000 ft</option>
+            <option value="22000">22 000 ft</option>
+            <option value="23000">23 000 ft</option>
+            <option value="24000">24 000 ft</option>
+            <option value="25000">25 000 ft</option>
+            <option value="26000">26 000 ft</option>
+            <option value="27000">27 000 ft</option>
+            <option value="28000">28 000 ft</option>
           </select>
           <label>OAT / ISA deviation (°C)</label>
           <input type="number" id="cOat" value="0" step="1">
@@ -1289,23 +1338,17 @@ function calcCruise() {
   const oatDev = +document.getElementById('cOat').value;
   const rpm = +document.getElementById('power').value;
 
-  const data = {
-    0:     {13500:{tas:255,ff:1450},12500:{tas:245,ff:1300},11500:{tas:235,ff:1150},10500:{tas:220,ff:1000}},
-    5000:  {13500:{tas:260,ff:1350},12500:{tas:250,ff:1200},11500:{tas:240,ff:1080},10500:{tas:225,ff:950}},
-    10000: {13500:{tas:265,ff:1250},12500:{tas:255,ff:1120},11500:{tas:245,ff:1000},10500:{tas:230,ff:880}},
-    16000: {13500:{tas:270,ff:1150},12500:{tas:260,ff:1050},11500:{tas:250,ff:930},10500:{tas:235,ff:820}},
-    20000: {13500:{tas:265,ff:1050},12500:{tas:255,ff:960},11500:{tas:245,ff:860},10500:{tas:230,ff:760}}
-  };
-  const d = data[alt][rpm] || {tas:250,ff:1100};
-  let tas = d.tas * Math.sqrt(43000 / w) * (1 + oatDev * 0.0015);
-  let ff = d.ff * Math.pow(w / 43000, 0.7);
+  const baseTas = getCruiseTAS(alt, rpm);
+  const baseFf = getCruiseFF(alt, rpm);
+  let tas = baseTas * Math.sqrt(43000 / Math.max(w, 30000)) * (1 + oatDev * 0.0015);
+  let ff = baseFf * Math.pow(w / 43000, 0.7);
 
   const el = document.getElementById('cruiseResult');
   el.style.display = 'block';
-  el.innerHTML = `Altitude ${alt} ft · N1 <b>${rpm} rpm</b>\n` +
+  el.innerHTML = `Altitude <b>${alt.toLocaleString()} ft</b> · N1 <b>${rpm} rpm</b>\n` +
     `Approx TAS: <b>${Math.round(tas)} kt</b>\n` +
     `Fuel flow: ≈ <b>${Math.round(ff)} kg/h</b> (total, air-bleed)\n` +
-    `<small>Derived from manual level-flight charts (§11.4).</small>`;
+    `<small>Interpolated from manual level-flight charts (§11.4).</small>`;
 }
 
 // ===== Fuel Planning (VFR / IFR) =====
@@ -1313,22 +1356,65 @@ const MAX_FUEL = 23830;   // kg
 const MTOW = 51000;       // kg
 const MLW = 47000;        // kg (approx from manual)
 
+// Reference cruise data (manual charts) + linear interpolation by altitude
+const CRUISE_REF = {
+  0:     {13500:{tas:255,ff:1450},12500:{tas:245,ff:1300},11500:{tas:235,ff:1150},10500:{tas:220,ff:1000}},
+  5000:  {13500:{tas:260,ff:1350},12500:{tas:250,ff:1200},11500:{tas:240,ff:1080},10500:{tas:225,ff:950}},
+  10000: {13500:{tas:265,ff:1250},12500:{tas:255,ff:1120},11500:{tas:245,ff:1000},10500:{tas:230,ff:880}},
+  16000: {13500:{tas:270,ff:1150},12500:{tas:260,ff:1050},11500:{tas:250,ff:930},10500:{tas:235,ff:820}},
+  20000: {13500:{tas:265,ff:1050},12500:{tas:255,ff:960},11500:{tas:245,ff:860},10500:{tas:230,ff:760}},
+  25000: {13500:{tas:255,ff:950},12500:{tas:245,ff:880},11500:{tas:235,ff:790},10500:{tas:220,ff:700}},
+  28000: {13500:{tas:245,ff:880},12500:{tas:235,ff:820},11500:{tas:225,ff:740},10500:{tas:210,ff:650}}
+};
+
+function lerpCruise(alt, rpm, key) {
+  const alts = Object.keys(CRUISE_REF).map(Number).sort((a,b)=>a-b);
+  const r = rpm in CRUISE_REF[alts[0]] ? rpm : 12500;
+  if (alt <= alts[0]) return CRUISE_REF[alts[0]][r][key];
+  if (alt >= alts[alts.length-1]) return CRUISE_REF[alts[alts.length-1]][r][key];
+  let lo = alts[0], hi = alts[1];
+  for (let i = 0; i < alts.length - 1; i++) {
+    if (alt >= alts[i] && alt <= alts[i+1]) { lo = alts[i]; hi = alts[i+1]; break; }
+  }
+  const a = CRUISE_REF[lo][r][key], b = CRUISE_REF[hi][r][key];
+  return a + (b - a) * (alt - lo) / (hi - lo);
+}
+
 function getCruiseFF(alt, rpm) {
-  const table = {
-    10000: {13500:1250, 12500:1120, 11500:1000},
-    16000: {13500:1150, 12500:1050, 11500:930},
-    20000: {13500:1050, 12500:960,  11500:860}
-  };
-  return (table[alt] && table[alt][rpm]) || 1100;
+  return Math.round(lerpCruise(alt, rpm, 'ff'));
 }
 
 function getCruiseTAS(alt, rpm) {
-  const table = {
-    10000: {13500:265, 12500:255, 11500:245},
-    16000: {13500:270, 12500:260, 11500:250},
-    20000: {13500:265, 12500:255, 11500:245}
-  };
-  return (table[alt] && table[alt][rpm]) || 250;
+  return Math.round(lerpCruise(alt, rpm, 'tas'));
+}
+
+function buildAltOptions(startFt, maxFt, selected) {
+  let html = '';
+  for (let a = startFt; a <= maxFt; a += 1000) {
+    const sel = a === selected ? ' selected' : '';
+    const label = a.toLocaleString('en-US').replace(/,/g, ' ');
+    html += `<option value="${a}"${sel}>${label} ft</option>`;
+  }
+  return html;
+}
+
+function applyAltList(selectId, rules, defaultIfr, defaultVfr) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const cur = +sel.value || defaultIfr;
+  if (rules === 'vfr') {
+    // VFR: 1500–19500 ft
+    let pick = Math.round(cur / 1000) * 1000;
+    if (pick < 1500 || pick > 19500) pick = defaultVfr;
+    sel.innerHTML = buildAltOptions(1500, 19500, pick);
+    if (![...sel.options].some(o => +o.value === +sel.value)) sel.value = defaultVfr;
+  } else {
+    // IFR: 5000–28000 ft
+    let pick = Math.round(cur / 1000) * 1000;
+    if (pick < 5000 || pick > 28000) pick = defaultIfr;
+    sel.innerHTML = buildAltOptions(5000, 28000, pick);
+    if (![...sel.options].some(o => +o.value === +sel.value)) sel.value = defaultIfr;
+  }
 }
 
 function toggleFuelRules() {
@@ -1336,6 +1422,12 @@ function toggleFuelRules() {
   document.getElementById('ifrOnly').style.display = rules === 'ifr' ? 'block' : 'none';
   document.getElementById('vfrOnly').style.display = rules === 'vfr' ? 'block' : 'none';
   document.getElementById('taxiFuel').value = 240;
+  applyAltList('fuelAlt', rules, 16000, 5500);
+}
+
+function toggleCruiseRules() {
+  const rules = document.getElementById('cruiseRules').value;
+  applyAltList('cAlt', rules, 16000, 5500);
 }
 
 function toggleTripMode() {
