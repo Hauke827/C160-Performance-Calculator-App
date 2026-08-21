@@ -954,6 +954,10 @@ function calcWB() {
     `<small>Absolute ceiling 28 000 ft (manual). Practical max falls with weight.</small>` +
     trimNote;
 
+  // Tank distribution for fuel entered in W&B
+  const dist = distributeTanks(Math.min(fuel, MAX_FUEL));
+  el.innerHTML += renderTankGraphic(dist);
+
   // Push values to other tabs
   document.getElementById('tow').value = Math.round(tow);
   document.getElementById('spdW').value = Math.round(tow);
